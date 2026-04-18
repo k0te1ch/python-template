@@ -1,8 +1,11 @@
+from pathlib import Path
+
 from app.config import Settings
 from app.logger import configure_logger
 
 
-def test_settings_load_from_env(tmp_path, monkeypatch):
+def test_settings_load_from_env(tmp_path: Path, monkeypatch) -> None:
+    """Verify settings load from a temporary .env file."""
     env_file = tmp_path / ".env"
     env_file.write_text("APP_NAME=TestApp\nLOG_LEVEL=DEBUG\n")
 
@@ -13,7 +16,8 @@ def test_settings_load_from_env(tmp_path, monkeypatch):
     assert settings.log_level == "DEBUG"
 
 
-def test_logger_writes_to_log_file(tmp_path, monkeypatch):
+def test_logger_writes_to_log_file(tmp_path: Path, monkeypatch) -> None:
+    """Verify logger writes entries into the logs directory."""
     monkeypatch.chdir(tmp_path)
     settings = Settings(app_name="TestApp", log_level="DEBUG")
     logger = configure_logger(settings)

@@ -1,13 +1,20 @@
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Any
 
 from app.config import Settings
 
 
 def configure_logger(settings: Settings) -> logging.Logger:
-    log_dir = Path("logs")
+    """Configure logging for the application.
+
+    Args:
+        settings: Loaded application settings containing the logger name and log level.
+
+    Returns:
+        Configured :class:`logging.Logger` instance.
+    """
+    log_dir: Path = Path("logs")
     log_dir.mkdir(parents=True, exist_ok=True)
 
     logger = logging.getLogger(settings.app_name)
