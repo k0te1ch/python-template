@@ -41,7 +41,7 @@ A ready-to-use Python project template with:
    poetry run pre-commit run --all-files
    ```
 
-6. Setup self-hosted runner
+6. Setup self-hosted runner if project private
 
 ## Logging
 
