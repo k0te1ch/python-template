@@ -15,7 +15,8 @@ def configure_logger(settings: Settings) -> logging.Logger:
     logger.propagate = False
 
     formatter = logging.Formatter(
-        "%Y-%m-%d %H:%M:%S | %(levelname)s | %(name)s | %(message)s"
+        "%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
     file_handler = RotatingFileHandler(
