@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "python-template"
+version = "0.1.0"
+description = "Python project template with logging, .env settings, pytest, and Ruff."
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [
+  { include = "app" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pydantic-settings = "^2.5"
+python-dotenv = "^1.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4"
+ruff = "^0.0"
+
+[build-system]
+requires = ["poetry-core>=1.5.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "C90", "B", "N"]
+exclude = ["logs", "tests/__pycache__", ".venv", "build", "dist"]
