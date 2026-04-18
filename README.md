@@ -41,6 +41,8 @@ A ready-to-use Python project template with:
    poetry run pre-commit run --all-files
    ```
 
+6. Setup self-hosted runner
+
 ## Logging
 
 Application logs are written to `logs/app.log` and the `logs/` directory is ignored by Git.

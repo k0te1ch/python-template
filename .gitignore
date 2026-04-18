@@ -1,5 +1,8 @@
 # Python.gitignore template
 
+# actions-runner is a tool that allows you to run GitHub Actions locally
+actions-runner/
+
 # IDEs
 .vscode/
 .idea/
