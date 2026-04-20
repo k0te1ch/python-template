@@ -10,4 +10,4 @@ repos:
     rev: v0.15.11
     hooks:
       - id: ruff
-        args: [check, .]
+        args: [.]

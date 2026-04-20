@@ -24,5 +24,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "C90", "B", "N"]
 exclude = ["logs", "tests/__pycache__", ".venv", "build", "dist"]
