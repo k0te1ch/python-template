@@ -7,8 +7,8 @@ A ready-to-use Python project template with:
 - `pytest` testing support
 - `poetry` dependency management
 - `ruff` static analysis
-- `commitizen` — Conventional Commits validation (pre-commit) and version bump
-- `git-cliff` — automated `CHANGELOG.md` + GitHub Release notes
+- `commitizen` — Conventional Commits validation (pre-commit)
+- `release-please` — automated version bump, `CHANGELOG.md`, tags and GitHub Releases via CI
 
 ## Quick start
 
@@ -54,27 +54,20 @@ Commit messages must follow [Conventional Commits](https://www.conventionalcommi
 (`feat:`, `fix:`, `docs:`, `chore:`, `feat(scope)!: …` for breaking, etc.).
 The commitizen `commit-msg` hook rejects non-conforming messages.
 
-To cut a release:
+Releases are automated by [release-please](https://github.com/googleapis/release-please)
+in CI — you never bump versions, write `CHANGELOG.md`, or create tags by hand:
 
-```bash
-poetry run cz bump          # bumps version in pyproject.toml, commits, creates tag
-git push --follow-tags      # pushing the tag triggers .github/workflows/release.yml
-```
+1. Land well-formed Conventional Commits on `main` (the commit types decide the bump:
+   `fix:` → patch, `feat:` → minor, `!` / `BREAKING CHANGE` → major).
+2. `release-please` opens and maintains a **release PR** with the version bump in
+   `pyproject.toml` + the changelog entry.
+3. Merge that PR — release-please creates the `vX.Y.Z` tag and the GitHub Release.
 
-The release workflow generates Release Notes for the new tag with `git-cliff --latest`,
-publishes a GitHub Release, regenerates the full `CHANGELOG.md`, and commits it back to `main` —
-so you do not need `git-cliff` installed locally.
+The current released version is seeded in `.release-please-manifest.json`.
 
-Before the first release, set `owner`/`repo` in `cliff.toml` so PR and author links resolve.
-
-To preview the changelog locally (optional), install `git-cliff` (`scoop install git-cliff`
-on Windows, `cargo install git-cliff`, or download from
-[git-cliff releases](https://github.com/orhun/git-cliff/releases)) and run:
-
-```bash
-git-cliff --unreleased      # preview pending changes
-git-cliff -o CHANGELOG.md   # rewrite the full changelog
-```
+> Enable **Settings → Actions → General → Workflow permissions → "Read and write
+> permissions"** and **"Allow GitHub Actions to create and approve pull requests"**,
+> otherwise the action cannot open the release PR.
 
 ## Logging
 
@@ -86,9 +79,10 @@ Application logs are written to `logs/app.log` and the `logs/` directory is igno
 - `app/config.py` — configuration model
 - `app/logger.py` — logger setup
 - `tests/` — test suite
-- `.github/workflows/python-app.yml` — GitHub Actions CI
-- `.github/workflows/release.yml` — Release workflow (triggered by `v*` tags)
+- `.github/workflows/python-app.yml` — GitHub Actions CI (lint + tests on PRs)
+- `.github/workflows/release-please.yml` — release automation (runs on push to `main`)
+- `release-please-config.json` — release-please configuration (release-type, changelog)
+- `.release-please-manifest.json` — current released version, owned by release-please
 - `.pre-commit-config.yaml` — pre-commit configuration
-- `cliff.toml` — git-cliff (changelog generator) configuration
-- `CHANGELOG.md` — auto-generated changelog
+- `CHANGELOG.md` — auto-generated changelog (owned by release-please)
 - `.env.example` — example environment settings

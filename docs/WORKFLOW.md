@@ -23,10 +23,10 @@ flowchart TD
     F --> G[Pull Request на GitHub]
     G --> H[CI: python-app.yml<br/>pre-commit + pytest]
     H -- зелёный + approve --> I[Squash/merge в main]
-    I --> J[poetry run cz bump<br/>+ git push --follow-tags]
-    J --> K[Tag v* запушен]
-    K --> L[CI: release.yml<br/>git-cliff]
-    L --> M[GitHub Release<br/>+ CHANGELOG.md commit в main]
+    I --> J[CI: release-please.yml]
+    J --> K[release-please открывает/<br/>обновляет release PR<br/>с bump + CHANGELOG]
+    K --> L[Merge release PR]
+    L --> M[Tag vX.Y.Z<br/>+ GitHub Release]
 
     classDef bad fill:#fee,stroke:#c33;
     class X bad;
@@ -82,16 +82,16 @@ feat(api): switch to httpx
 BREAKING CHANGE: requests dependency removed; clients must use httpx.
 ```
 
-`cz bump` смотрит на эти типы и решает, как менять версию:
+`release-please` смотрит на эти типы и решает, как менять версию:
 
 - `BREAKING CHANGE` → **major** (1.2.3 → 2.0.0)
 - `feat:` → **minor** (1.2.3 → 1.3.0)
 - `fix:` / `perf:` → **patch** (1.2.3 → 1.2.4)
-- остальное → версия не меняется (нужно `--increment` руками)
+- остальное → версия не меняется
 
-> Пока в `pyproject.toml` стоит `major_version_zero = true` (версия `0.x.y`),
-> breaking change поднимет minor, а не major — это нормально для проекта,
-> ещё не выпустившего `1.0.0`.
+> Пока в проекте версия `0.x.y`, опция `bump-minor-pre-major` в
+> `release-please-config.json` держит breaking change на уровне minor, а не
+> major — это нормально для проекта, ещё не выпустившего `1.0.0`.
 
 ---
 
@@ -151,7 +151,7 @@ gitGraph
     commit id: "feat(cache): in-memory"
     checkout main
     merge feature/cache tag: "PR #15"
-    commit id: "bump: 0.1.0 -> 0.2.0" tag: "v0.2.0"
+    commit id: "chore: release 0.2.0" tag: "v0.2.0"
 ```
 
 - Одна долгоживущая ветка: `main`.
@@ -311,34 +311,39 @@ flowchart LR
 
 ---
 
-## 7. Релиз — что происходит после `cz bump`
+## 7. Релиз — что делает release-please
+
+Никаких ручных `cz bump` и тегов. Версия, `CHANGELOG.md`, тег и GitHub Release —
+всё автоматизировано через [release-please](https://github.com/googleapis/release-please).
+Твоя задача — просто мержить корректные Conventional Commits в `main`.
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant Dev as Разработчик
-    participant Local as Local repo
-    participant GH as GitHub
-    participant CI as release.yml
+    participant GH as GitHub (main)
+    participant CI as release-please.yml
+    participant PR as Release PR
     participant Rel as GitHub Releases
 
-    Dev->>Local: poetry run cz bump
-    Local->>Local: читает коммиты с прошлого тега
-    Local->>Local: определяет bump: patch/minor/major
-    Local->>Local: правит pyproject.toml<br/>создаёт коммит "bump: ..."<br/>создаёт тег vX.Y.Z
-    Dev->>GH: git push --follow-tags
-    GH->>CI: триггер по тегу v*
-    CI->>CI: checkout с fetch-depth: 0
-    CI->>CI: git-cliff --latest<br/>→ RELEASE_NOTES.md
-    CI->>CI: git-cliff --output CHANGELOG.md<br/>(полный)
-    CI->>Rel: создание GitHub Release<br/>с RELEASE_NOTES.md
-    CI->>GH: commit обновлённого<br/>CHANGELOG.md в main
+    Dev->>GH: merge feature-ветки в main
+    GH->>CI: триггер по push в main
+    CI->>CI: читает Conventional Commits<br/>с прошлого релиза
+    CI->>CI: определяет bump: patch/minor/major
+    CI->>PR: открывает/обновляет release PR<br/>(bump pyproject.toml + CHANGELOG.md)
+    Note over Dev,PR: release PR копится, пока<br/>не решишь выпустить релиз
+    Dev->>PR: merge release PR
+    PR->>Rel: создание тега vX.Y.Z<br/>+ GitHub Release
 ```
 
 Что увидит пользователь:
-- На вкладке **Releases** — новый релиз с группированным списком изменений и ссылками на PR/авторов.
-- В корне репо — обновлённый [CHANGELOG.md](../CHANGELOG.md) с полной историей.
-- Тег `vX.Y.Z` в `git tag`.
+- Пока есть невыпущенные изменения — открытый **release PR** с предпросмотром bump и changelog.
+- После merge release PR: тег `vX.Y.Z`, GitHub Release и обновлённый [CHANGELOG.md](../CHANGELOG.md).
+- Текущая выпущенная версия хранится в [.release-please-manifest.json](../.release-please-manifest.json).
+
+> Для работы action включи в **Settings → Actions → General → Workflow
+> permissions**: «Read and write permissions» и «Allow GitHub Actions to create
+> and approve pull requests».
 
 ---
 
@@ -367,9 +372,8 @@ gitGraph
 git switch -c hotfix/1.2.1 v1.2.0
 # ... фикс ...
 git commit -m "fix(api): null pointer in /users"
-poetry run cz bump --increment PATCH
-git push --follow-tags origin hotfix/1.2.1
-# дальше PR hotfix/1.2.1 -> main
+git push origin hotfix/1.2.1
+# дальше PR hotfix/1.2.1 -> main; release-please сам поднимет patch и выпустит релиз
 ```
 
 Это редкий сценарий, и если он у тебя случается часто — пора смотреть в
@@ -382,10 +386,11 @@ git push --follow-tags origin hotfix/1.2.1
 | Файл                                      | Что делает                                                       |
 |-------------------------------------------|------------------------------------------------------------------|
 | [.pre-commit-config.yaml](../.pre-commit-config.yaml) | Запускает ruff и commitizen на каждом `git commit`               |
-| [pyproject.toml](../pyproject.toml) (`[tool.commitizen]`) | Конфиг bump и формата тегов                                      |
-| [cliff.toml](../cliff.toml)               | Шаблон changelog и правила группировки коммитов                  |
+| [pyproject.toml](../pyproject.toml) (`[tool.commitizen]`) | Валидация Conventional Commits (commit-msg hook)                 |
+| [release-please-config.json](../release-please-config.json) | Конфиг release-please: release-type, changelog, правила bump    |
+| [.release-please-manifest.json](../.release-please-manifest.json) | Текущая выпущенная версия (ведёт release-please)                |
 | [.github/workflows/python-app.yml](../.github/workflows/python-app.yml) | CI на каждый PR: lint + tests                                    |
-| [.github/workflows/release.yml](../.github/workflows/release.yml) | CI на тег `v*`: changelog + GitHub Release                       |
+| [.github/workflows/release-please.yml](../.github/workflows/release-please.yml) | На push в `main`: release PR → тег + GitHub Release             |
 | [CHANGELOG.md](../CHANGELOG.md)           | Авто-сгенерированная история. Руками **не редактировать**.       |
 
 ---
@@ -395,5 +400,5 @@ git push --follow-tags origin hotfix/1.2.1
 1. Commit-сообщения пишем по Conventional Commits — без этого коммит не пройдёт.
 2. Каждая задача — отдельная короткая ветка `feature/...`, через PR в `main`.
 3. На `main` всегда зелёный CI, всегда deployable.
-4. Релиз: `poetry run cz bump && git push --follow-tags` — всё остальное делает CI.
+4. Релиз: ничего не бампим руками — release-please копит release PR; мерж PR = новый тег и Release.
 5. CHANGELOG.md и Release Notes никто руками не пишет — они генерируются из истории коммитов.
