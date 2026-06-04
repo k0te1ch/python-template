@@ -35,7 +35,12 @@ def configure_logger(settings: Settings) -> logging.Logger:
     file_handler.setFormatter(formatter)
     file_handler.setLevel(settings.log_level.upper())
 
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel(settings.log_level.upper())
+
     if not logger.handlers:
         logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
 
     return logger

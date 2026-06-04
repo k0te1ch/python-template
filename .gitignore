@@ -226,3 +226,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# aislop guardrail config (read from disk regardless of git)
+.aislop/
