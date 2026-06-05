@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/k0te1ch/python-template/compare/v0.2.0...v0.3.0) (2026-06-05)
+
+
+### Features
+
+* harden config/logging and add mypy + coverage tooling ([46ea286](https://github.com/k0te1ch/python-template/commit/46ea28666cdb2a27dae73f74739bdffe0614ce8b))
+* harden config/logging and add mypy + coverage tooling ([6ee5158](https://github.com/k0te1ch/python-template/commit/6ee51583687ea90a7806bd1d8ea54364a2c7db5d))
+
+
+### Documentation
+
+* **changelog:** update for v0.2.0 ([8252836](https://github.com/k0te1ch/python-template/commit/82528367606c5fa0005f764f6f515ea9a6d3de84))
+
 ## [0.2.0] - 2026-05-29
 
 ### Bug Fixes
