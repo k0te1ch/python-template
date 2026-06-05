@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-template"
-version = "0.2.0"
+version = "0.3.0"
 description = "Python project template with logging, .env settings, pytest, and Ruff."
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
